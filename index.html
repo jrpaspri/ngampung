@@ -3,43 +3,79 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>WARUNG CAK BOWO</title>
+  <title>Penerbitan Dokumen - JRP Jember</title>
   <link rel="icon" href="https://i.ibb.co.com/fGMy73ry/download-removebg-preview.png" type="image/png" />
   <style>
-    html, body {
+    body {
       margin: 0;
       padding: 0;
       width: 100%;
-      height: 100%;
-      background-color: #eee;
-      overflow: hidden; /* Mencegah scroll ganda */
+      height: 100dvh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #f4f6f9;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-
-    .iframe-container {
-      width: 100%;
-      height: 100dvh; /* Menggunakan dvh agar pas di mobile browser */
-      overflow: hidden;
+    .loader-card {
+      text-align: center;
+      padding: 30px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      max-width: 350px;
+      width: 90%;
     }
-
-    iframe {
-      display: block;
-      width: 100%;
-      height: 100%;
-      border: none;
+    .spinner {
+      width: 45px;
+      height: 45px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #0056b3;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px auto;
     }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    h3 { color: #333; margin-bottom: 8px; font-size: 18px; }
+    p { color: #666; font-size: 14px; margin: 0; }
   </style>
 </head>
 <body>
-  <div class="iframe-container">
-    <iframe
-      id="app"
-      src="https://script.google.com/macros/s/AKfycby6Dr4JwdUHgxzOgmpoKRFCGjwWXguz__DzO6N47_dGI5ALQmExuJMafLz1D5Sso09N/exec"
-      scrolling="yes"
-      allowfullscreen="true"
-      webkitallowfullscreen="true"
-      mozallowfullscreen="true"
-      allow="fullscreen; camera; microphone; display-capture; geolocation;">
-    </iframe>
+
+  <div class="loader-card" id="cardInfo">
+    <div class="spinner"></div>
+    <h3 id="statusTitle">Menyiapkan Dokumen</h3>
+    <p id="statusDesc">Sedang memuat file PDF Anda...</p>
   </div>
+
+  <script>
+    // Tangkap parameter query dari URL (contoh: ?pdf=...&no=...)
+    const urlParams = new URLSearchParams(window.location.search);
+    const pdfUrl = urlParams.get('pdf');
+    const noSurat = urlParams.get('no');
+
+    if (pdfUrl) {
+      if (noSurat) {
+        document.getElementById('statusTitle').innerText = "Mengunduh Dokumen";
+        document.getElementById('statusDesc').innerText = "Nomor Surat: " + decodeURIComponent(noSurat);
+      }
+
+      // Beri sedikit jeda agar animasi loading sempat terlihat, lalu alihkan ke file PDF
+      setTimeout(() => {
+        window.location.replace(decodeURIComponent(pdfUrl));
+      }, 800);
+      
+    } else {
+      // Jika dibuka tanpa parameter, tampilkan pesan informasi atau arahkan ke situs utama
+      document.getElementById('cardInfo').innerHTML = `
+        <h3>PT Jasaraharja Putera</h3>
+        <p style="margin-top: 10px; color: #444;">Layanan Bot Automasi Dokumen aktif dan berjalan normal.</p>
+      `;
+    }
+  </script>
+
 </body>
 </html>
