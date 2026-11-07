@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Penerbitan Dokumen - JRP Jember</title>
+  <title>Unduh Dokumen Surat - JRP Jember</title>
   <link rel="icon" href="https://i.ibb.co.com/fGMy73ry/download-removebg-preview.png" type="image/png" />
   <style>
     body {
@@ -23,7 +23,7 @@
       background: white;
       border-radius: 12px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-      max-width: 350px;
+      max-width: 380px;
       width: 90%;
     }
     .spinner {
@@ -40,39 +40,55 @@
       100% { transform: rotate(360deg); }
     }
     h3 { color: #333; margin-bottom: 8px; font-size: 18px; }
-    p { color: #666; font-size: 14px; margin: 0; }
+    p { color: #666; font-size: 14px; margin: 0; line-height: 1.4; }
   </style>
 </head>
 <body>
 
   <div class="loader-card" id="cardInfo">
     <div class="spinner"></div>
-    <h3 id="statusTitle">Menyiapkan Dokumen</h3>
-    <p id="statusDesc">Sedang memuat file PDF Anda...</p>
+    <h3 id="statusTitle">Menyiapkan Dokumen PDF</h3>
+    <p id="statusDesc">Sedang memproses unduhan untuk Anda...</p>
   </div>
 
   <script>
-    // Tangkap parameter query dari URL (contoh: ?pdf=...&no=...)
     const urlParams = new URLSearchParams(window.location.search);
-    const pdfUrl = urlParams.get('pdf');
-    const noSurat = urlParams.get('no');
+    const pdfId = urlParams.get('pdf'); // Contoh: PL-R-533-2026 ANDY REZA
+    const targetUrl = urlParams.get('target'); // Link asli GAS tersembunyi
 
-    if (pdfUrl) {
-      if (noSurat) {
-        document.getElementById('statusTitle').innerText = "Mengunduh Dokumen";
-        document.getElementById('statusDesc').innerText = "Nomor Surat: " + decodeURIComponent(noSurat);
-      }
+    if (pdfId && targetUrl) {
+      document.getElementById('statusDesc').innerText = "Dokumen: " + decodeURIComponent(pdfId);
 
-      // Beri sedikit jeda agar animasi loading sempat terlihat, lalu alihkan ke file PDF
-      setTimeout(() => {
-        window.location.replace(decodeURIComponent(pdfUrl));
-      }, 800);
-      
+      // Ambil file PDF melalui fetch di balik layar agar Android mendownloadnya sebagai file, bukan buka Sheet
+      fetch(decodeURIComponent(targetUrl))
+        .then(response => {
+          if (!response.ok) throw new Error('Gagal mengambil dokumen.');
+          return response.blob();
+        })
+        .then(blob => {
+          const blobUrl = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = blobUrl;
+          a.download = decodeURIComponent(pdfId) + ".pdf";
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(blobUrl);
+          
+          document.getElementById('spinner').style.display = 'none';
+          document.getElementById('statusTitle').innerText = "Berhasil Diunduh!";
+          document.getElementById('statusDesc').innerText = "Silakan cek folder Unduhan/Downloads di perangkat Anda.";
+        })
+        .catch(err => {
+          console.error(err);
+          // Fallback jika fetch diblokir CORS oleh Google: Buka langsung via window location
+          window.location.replace(decodeURIComponent(targetUrl));
+        });
+
     } else {
-      // Jika dibuka tanpa parameter, tampilkan pesan informasi atau arahkan ke situs utama
       document.getElementById('cardInfo').innerHTML = `
         <h3>PT Jasaraharja Putera</h3>
-        <p style="margin-top: 10px; color: #444;">Layanan Bot Automasi Dokumen aktif dan berjalan normal.</p>
+        <p style="margin-top: 10px; color: #444;">Layanan Bot Automasi Dokumen aktif.</p>
       `;
     }
   </script>
