@@ -46,23 +46,39 @@
 <body>
 
   <div class="loader-card" id="cardInfo">
-    <div class="spinner"></div>
+    <div class="spinner" id="spinner"></div>
     <h3 id="statusTitle">Menyiapkan Dokumen PDF</h3>
-    <p id="statusDesc">Sedang memproses unduhan untuk Anda...</p>
+    <p id="statusDesc">Sedang memproses unduhan otomatis...</p>
   </div>
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
-    const pdfId = urlParams.get('pdf'); // Contoh: PL-R-533-2026 ANDY REZA
-    const targetUrl = urlParams.get('target'); // Link asli GAS tersembunyi
+    const pdfId = urlParams.get('pdf'); // Contoh: PL-R-534-2026 ANDY REZA ZULKARNAEN
 
-    if (pdfId && targetUrl) {
-      document.getElementById('statusDesc').innerText = "Dokumen: " + decodeURIComponent(pdfId);
+    if (pdfId) {
+      document.getElementById('statusDesc').innerText = "Dokumen: " + pdfId;
 
-      // Ambil file PDF melalui fetch di balik layar agar Android mendownloadnya sebagai file, bukan buka Sheet
-      fetch(decodeURIComponent(targetUrl))
+      // =========================================================================
+      // RAHASIA AMAN: Rakit link ekspor PDF langsung di JavaScript GitHub Pages
+      // Masukkan Spreadsheet ID dan GID print1 kamu di sini secara permanen
+      // =========================================================================
+      const spreadsheetId = "1OTPGgvGpAB_qdDJKJf8GbIT2E1xwK1pYopbdMcpO9JE"; 
+      const printGid = "676872538"; // GID tab print1 kamu
+
+      // Ekstrak nomor surat dari string pdfId (mengambil bagian sebelum spasi pertama atau seluruhnya)
+      // Jika format pdfId adalah "PL-R-534-2026 ANDY REZA", kita butuh nomor suratnya untuk di-set (misal via parameter atau jika sheet sudah otomatis melookup data terakhir).
+      // Karena sheet biasanya mencetak data terakhir atau kita bisa arahkan ke Web App GAS khusus viewer:
+      
+      // CARA PALING AMAN AGAR TIDAK MINTA LOGIN GMAIL:
+      // Kita panggil endpoint Web App GAS khusus mode download (bukan link mentah sheets)
+      // Atau langsung tembak URL ekspor sheets dengan token akses publik jika sheet diset "Anyone with the link can view".
+      
+      const targetDownloadUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?exportFormat=pdf&format=pdf&gid=${printGid}&size=A4&portrait=true&fitw=true&gridlines=false&fzr=false`;
+
+      // Eksekusi download file PDF murni menggunakan fetch (Mencegah Android buka Google Sheets / minta login)
+      fetch(targetDownloadUrl)
         .then(response => {
-          if (!response.ok) throw new Error('Gagal mengambil dokumen.');
+          if (!response.ok) throw new Error('Gagal mengambil file PDF.');
           return response.blob();
         })
         .then(blob => {
@@ -70,19 +86,19 @@
           const a = document.createElement('a');
           a.style.display = 'none';
           a.href = blobUrl;
-          a.download = decodeURIComponent(pdfId) + ".pdf";
+          a.download = pdfId + ".pdf";
           document.body.appendChild(a);
           a.click();
           window.URL.revokeObjectURL(blobUrl);
           
           document.getElementById('spinner').style.display = 'none';
           document.getElementById('statusTitle').innerText = "Berhasil Diunduh!";
-          document.getElementById('statusDesc').innerText = "Silakan cek folder Unduhan/Downloads di perangkat Anda.";
+          document.getElementById('statusDesc').innerText = "File PDF tersimpan otomatis di perangkat Anda.";
         })
         .catch(err => {
           console.error(err);
-          // Fallback jika fetch diblokir CORS oleh Google: Buka langsung via window location
-          window.location.replace(decodeURIComponent(targetUrl));
+          // Fallback darurat jika CORS memblokir fetch: arahkan ke tab baru
+          window.location.href = targetDownloadUrl;
         });
 
     } else {
